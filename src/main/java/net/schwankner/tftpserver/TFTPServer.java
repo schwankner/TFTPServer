@@ -44,7 +44,12 @@ public class TFTPServer {
                         System.out.println("Send file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
                         sendOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
                         for (DataMessage dataMessage : sendOperation.getMessageCollection()) {
-                            network.sendPacket(dataMessage.buildBlob(), packet.getAddress(), true);
+                            network.sendPacket(dataMessage.buildBlob(), packet.getAddress(), packet.getPort(), false);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+
+                            }
                         }
                         System.out.println("File " + readMessage.getFileName() + " send with: " + sendOperation.getDataSize() + " bytes");
 
