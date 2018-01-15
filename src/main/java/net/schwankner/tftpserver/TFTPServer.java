@@ -8,14 +8,20 @@ import net.schwankner.tftplibrary.Network;
 import net.schwankner.tftplibrary.Utils;
 
 import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Alexander Schwankner on 13.01.18.
  */
 public class TFTPServer {
-    public static void main(String[] args) {
-        Network network = new Network(69);
+
+    private Map<InetAddress,SaveOperation> saveOperationsMap = new HashMap<>();
+
+    public void run(int port) {
+        Network network = new Network(port);
         network.connect(true);
 
         while (true) {
@@ -30,6 +36,8 @@ public class TFTPServer {
                         break;
                     case WRQ:
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
+                        SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
+                        saveOperationsMap.put(packet.getAddress(),saveOperation);
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         (short) 0).buildBlob(),
@@ -39,13 +47,18 @@ public class TFTPServer {
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
+                        try{
+                        saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
+                        }catch (Exception e){
+                            //@todo: return error message
+                            System.out.println(e);
+                        }
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         dataMessage.getPacketNumber()).buildBlob(),
                                         packet.getAddress(),
                                         packet.getPort(),
-                        false);
-                        System.out.println(dataMessage.getPacketNumber());
+                                        false);
                         break;
                     case ACK:
 
