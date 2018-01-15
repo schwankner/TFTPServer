@@ -1,11 +1,7 @@
 package net.schwankner.tftpserver;
 
-import net.schwankner.tftplibrary.Messages.AcknowledgementMessage;
-import net.schwankner.tftplibrary.Messages.DataMessage;
-import net.schwankner.tftplibrary.Messages.OpCode;
-import net.schwankner.tftplibrary.Messages.WriteMessage;
-import net.schwankner.tftplibrary.Network;
-import net.schwankner.tftplibrary.Utils;
+import net.schwankner.tftplibrary.*;
+import net.schwankner.tftplibrary.Messages.*;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -20,7 +16,8 @@ public class TFTPServer {
 
     private int port;
     private boolean verbose;
-    private Map<InetAddress,SaveOperation> saveOperationsMap = new HashMap<>();
+    private Map<InetAddress, WriteOperation> saveOperationsMap = new HashMap<>();
+    private Map<InetAddress, ReadOperation> readOperationsMap = new HashMap<>();
 
     public TFTPServer(int port, boolean verbose) {
         this.port = port;
@@ -43,12 +40,20 @@ public class TFTPServer {
                 }
                 switch (opcode) {
                     case RRQ:
+                        ReadMessage readMessage = new ReadMessage(packet.getData());
+                        ReadOperation readOperation = new ReadOperation();
+                        System.out.println("Send file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
+                        readOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
+                        for (DataMessage dataMessage : readOperation.getMessageCollection()) {
+                            network.sendPacket(dataMessage.buildBlob(), packet.getAddress(), true);
+                        }
+                        System.out.println("File " + readMessage.getFileName() + " send with: " + readOperation.getDataSize() + " bytes");
 
                         break;
                     case WRQ:
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
-                        SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
-                        saveOperationsMap.put(packet.getAddress(),saveOperation);
+                        WriteOperation writeOperation = new WriteOperation(writeMessage.getFileName());
+                        saveOperationsMap.put(packet.getAddress(), writeOperation);
                         if (verbose) {
                             System.out.print("\n");
                         }
