@@ -16,8 +16,7 @@ public class TFTPServer {
 
     private int port;
     private boolean verbose;
-    private Map<InetAddress, WriteOperation> saveOperationsMap = new HashMap<>();
-    private Map<InetAddress, ReadOperation> readOperationsMap = new HashMap<>();
+    private Map<InetAddress, ReceiveOperation> saveOperationsMap = new HashMap<>();
 
     public TFTPServer(int port, boolean verbose) {
         this.port = port;
@@ -41,19 +40,19 @@ public class TFTPServer {
                 switch (opcode) {
                     case RRQ:
                         ReadMessage readMessage = new ReadMessage(packet.getData());
-                        ReadOperation readOperation = new ReadOperation();
+                        SendOperation sendOperation = new SendOperation();
                         System.out.println("Send file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
-                        readOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
-                        for (DataMessage dataMessage : readOperation.getMessageCollection()) {
+                        sendOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
+                        for (DataMessage dataMessage : sendOperation.getMessageCollection()) {
                             network.sendPacket(dataMessage.buildBlob(), packet.getAddress(), true);
                         }
-                        System.out.println("File " + readMessage.getFileName() + " send with: " + readOperation.getDataSize() + " bytes");
+                        System.out.println("File " + readMessage.getFileName() + " send with: " + sendOperation.getDataSize() + " bytes");
 
                         break;
                     case WRQ:
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
-                        WriteOperation writeOperation = new WriteOperation(writeMessage.getFileName());
-                        saveOperationsMap.put(packet.getAddress(), writeOperation);
+                        ReceiveOperation receiveOperation = new ReceiveOperation(writeMessage.getFileName());
+                        saveOperationsMap.put(packet.getAddress(), receiveOperation);
                         if (verbose) {
                             System.out.print("\n");
                         }
