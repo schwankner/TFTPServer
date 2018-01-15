@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class TFTPServer {
     public static void main(String[] args) {
-        Network network = new Network(2069);
+        Network network = new Network(69);
         network.connect(true);
 
         while (true) {
@@ -44,7 +44,8 @@ public class TFTPServer {
                                         dataMessage.getPacketNumber()).buildBlob(),
                                         packet.getAddress(),
                                         packet.getPort(),
-                                        false);
+                        false);
+                        System.out.println(dataMessage.getPacketNumber());
                         break;
                     case ACK:
 
