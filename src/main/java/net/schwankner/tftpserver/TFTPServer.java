@@ -38,6 +38,7 @@ public class TFTPServer {
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
                         SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
                         saveOperationsMap.put(packet.getAddress(),saveOperation);
+                        System.out.println("Receive file: "+writeMessage.getFileName());
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         (short) 0).buildBlob(),
