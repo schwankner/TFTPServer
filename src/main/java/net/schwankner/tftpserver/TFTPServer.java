@@ -18,13 +18,19 @@ import java.util.concurrent.TimeoutException;
  */
 public class TFTPServer {
 
+    private int port;
     private Map<InetAddress,SaveOperation> saveOperationsMap = new HashMap<>();
 
-    public void run(int port) {
+    public TFTPServer(int port){
+        this.port = port;
+    }
+
+    public void run() {
         Network network = new Network(port);
         network.connect(true);
 
         while (true) {
+            System.out.println("Server waiting for packets...");
             try {
                 DatagramPacket packet = network.receivePacket();
 
