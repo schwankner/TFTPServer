@@ -36,6 +36,7 @@ public class TFTPServer {
 
                 OpCode opcode = Utils.getOpCode(packet.getData());
 
+                System.out.println(opcode);
                 switch (opcode) {
                     case RRQ:
 
@@ -55,7 +56,7 @@ public class TFTPServer {
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
                         try{
-                        saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
+                            saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
                         }catch (Exception e){
                             //@todo: return error message
                             System.out.println(e);
@@ -76,7 +77,6 @@ public class TFTPServer {
                     default:
                         break;
                 }
-                System.out.println(opcode);
 
             } catch (TimeoutException e) {
                 break;
