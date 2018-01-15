@@ -23,6 +23,7 @@ public class SaveOperation {
             this.dataMap.add(dataMessage);
             return false;
         } else if (dataMessage.getSize() < 512) {
+            this.dataMap.add(dataMessage);
             writeFile();
             return true;
         } else {
@@ -43,7 +44,7 @@ public class SaveOperation {
                 blob[j + i * 512] = dataMap.get(i).getPayload()[j];
             }
         }
-        FileSystem.writeBlobToFile(blob);
+        FileSystem.writeBlobToFile(blob,filename);
     }
 
 

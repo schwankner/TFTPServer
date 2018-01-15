@@ -26,7 +26,7 @@ public class TFTPServerApplication {
                 helpInformation(options);
                 System.exit(1);
             }
-            TFTPServer tftpServer = new TFTPServer(69);
+            TFTPServer tftpServer = new TFTPServer(2069);
             //@todo:implment read port from cli
             tftpServer.run();
             System.exit(0);

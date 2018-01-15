@@ -29,14 +29,14 @@ public class TFTPServer {
         Network network = new Network(port);
         network.connect(true);
 
+        System.out.println("Server waiting for packets...");
         while (true) {
-            System.out.println("Server waiting for packets...");
             try {
                 DatagramPacket packet = network.receivePacket();
 
                 OpCode opcode = Utils.getOpCode(packet.getData());
 
-                System.out.println(opcode);
+                System.out.print("Packet type: "+opcode);
                 switch (opcode) {
                     case RRQ:
 
@@ -45,7 +45,7 @@ public class TFTPServer {
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
                         SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
                         saveOperationsMap.put(packet.getAddress(),saveOperation);
-                        System.out.println("Receive file: "+writeMessage.getFileName());
+                        System.out.println("\nReceive file: "+writeMessage.getFileName());
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         (short) 0).buildBlob(),
@@ -55,6 +55,7 @@ public class TFTPServer {
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
+                        System.out.println(" #"+dataMessage.getPacketNumber());
                         try{
                             saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
                         }catch (Exception e){
