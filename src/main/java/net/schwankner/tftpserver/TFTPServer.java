@@ -19,10 +19,12 @@ import java.util.concurrent.TimeoutException;
 public class TFTPServer {
 
     private int port;
+    private boolean verbose;
     private Map<InetAddress,SaveOperation> saveOperationsMap = new HashMap<>();
 
-    public TFTPServer(int port){
+    public TFTPServer(int port, boolean verbose) {
         this.port = port;
+        this.verbose = verbose;
     }
 
     public void run() {
@@ -36,7 +38,9 @@ public class TFTPServer {
 
                 OpCode opcode = Utils.getOpCode(packet.getData());
 
-                System.out.print("Packet type: "+opcode);
+                if (verbose) {
+                    System.out.print("Packet type: " + opcode);
+                }
                 switch (opcode) {
                     case RRQ:
 
@@ -45,7 +49,10 @@ public class TFTPServer {
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
                         SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
                         saveOperationsMap.put(packet.getAddress(),saveOperation);
-                        System.out.println("\nReceive file: "+writeMessage.getFileName());
+                        if (verbose) {
+                            System.out.print("\n");
+                        }
+                        System.out.println("Receive file: " + writeMessage.getFileName() + " from: " + packet.getAddress().toString());
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         (short) 0).buildBlob(),
@@ -55,7 +62,9 @@ public class TFTPServer {
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
-                        System.out.println(" #"+dataMessage.getPacketNumber());
+                        if (verbose) {
+                            System.out.println(" #" + dataMessage.getPacketNumber());
+                        }
                         try{
                             saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
                         }catch (Exception e){
