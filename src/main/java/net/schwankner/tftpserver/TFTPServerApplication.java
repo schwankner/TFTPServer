@@ -17,10 +17,16 @@ public class TFTPServerApplication {
         options.addOption("t", "timeout", true, "timeout between sending and retries. Default: 10");
         options.addOption("r", "retries", true, "How many times tftserver retries to send its messages. Default: 5");
         options.addOption("v", "verbose", false, "Verbose output for debuging");
+        options.addOption("h", "help", false, "echos this help");
 
         try {
             // parse the command line arguments
             CommandLine line = parser.parse(options, args);
+
+            if (line.hasOption("help")) {
+                helpInformation(options);
+                System.exit(0);
+            }
 
             if (line.getArgs().length <= 0 && line.getOptions().length <= 0) {
                 helpInformation(options);
