@@ -33,7 +33,12 @@ public class TFTPServerApplication {
                 System.exit(1);
             }
             boolean verbose = line.hasOption("verbose");
-            TFTPServer tftpServer = new TFTPServer(Integer.parseInt(line.getOptionValue("port", "69")), verbose);
+            TFTPServer tftpServer = new TFTPServer(
+                    Integer.parseInt(line.getOptionValue("port", "69")),
+                    Integer.parseInt(line.getOptionValue("timeout", "10")) * 1000,
+                    Integer.parseInt(line.getOptionValue("retries", "5")),
+                    verbose
+            );
             tftpServer.run();
             System.exit(0);
 

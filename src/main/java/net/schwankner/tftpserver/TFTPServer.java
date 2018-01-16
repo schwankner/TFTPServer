@@ -14,18 +14,20 @@ import java.util.concurrent.TimeoutException;
  */
 public class TFTPServer {
 
-    private int port;
+    private int port, timeout, retries;
     private boolean verbose;
     private Map<InetAddress, ReceiveOperation> receiveOperationsMap = new HashMap<>();
     private Map<InetAddress, SendOperation> sendOperationsMap = new HashMap<>();
 
-    public TFTPServer(int port, boolean verbose) {
+    public TFTPServer(int port, int timeout, int retries, boolean verbose) {
         this.port = port;
+        this.timeout = timeout;
+        this.retries = retries;
         this.verbose = verbose;
     }
 
     public void run() {
-        Network network = new Network(port);
+        Network network = new Network(port, timeout, retries);
         network.connect(true);
 
         System.out.println("Server waiting for requests...");
