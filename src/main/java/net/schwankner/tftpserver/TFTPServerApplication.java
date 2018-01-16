@@ -12,7 +12,6 @@ public class TFTPServerApplication {
 
         // create the Options
         Options options = new Options();
-        options.addOption("n", "protocol", true, "use tcp or udp as transport protocol. Default: udp");
         options.addOption("p", "port", true, "port for connection with remote host. Default: 69");
         options.addOption("t", "timeout", true, "timeout between sending and retries. Default: 10");
         options.addOption("r", "retries", true, "how many times tftserver retries to send its messages. Default: 5");
