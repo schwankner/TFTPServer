@@ -12,7 +12,6 @@ public class TFTPServerApplication {
 
         // create the Options
         Options options = new Options();
-        options.addOption("n", "protocol", true, "use tcp or udp as transport protocol. Default: udp");
         options.addOption("p", "port", true, "port for connection with remote host. Default: 69");
         options.addOption("t", "timeout", true, "timeout between sending and retries. Default: 10");
         options.addOption("r", "retries", true, "how many times tftserver retries to send its messages. Default: 5");
@@ -33,7 +32,12 @@ public class TFTPServerApplication {
                 System.exit(1);
             }
             boolean verbose = line.hasOption("verbose");
-            TFTPServer tftpServer = new TFTPServer(Integer.parseInt(line.getOptionValue("port", "69")), verbose);
+            TFTPServer tftpServer = new TFTPServer(
+                    Integer.parseInt(line.getOptionValue("port", "69")),
+                    Integer.parseInt(line.getOptionValue("timeout", "10")) * 1000,
+                    Integer.parseInt(line.getOptionValue("retries", "5")),
+                    verbose
+            );
             tftpServer.run();
             System.exit(0);
 
