@@ -41,7 +41,7 @@ public class TFTPServer {
                         SendOperation sendOperation = new SendOperation();
                         sendOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
                         verboseOutput("Got RRQ for " + readMessage.getFileName() + " from " + packet.getAddress().toString());
-                        System.out.println("Write file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
+                        System.out.println("Send file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
                         verboseOutput("File split in " + sendOperation.getMessageListSize() + " packets");
                         sendOperationsMap.put(packet.getAddress(), sendOperation);
                         try {
@@ -66,16 +66,26 @@ public class TFTPServer {
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
-                        verboseOutput("Got DATA #" + dataMessage.getPacketNumber());
                         try {
-                            verboseOutput("Send Ack #" + dataMessage.getPacketNumber());
-                            receiveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
-                            network.sendPacket(
-                                    new AcknowledgementMessage(
-                                            dataMessage.getPacketNumber()).buildBlob(),
-                                    packet.getAddress(),
-                                    packet.getPort(),
-                                    false);
+                            try {
+                                ReceiveOperation receiveOperation1 = receiveOperationsMap.get(packet.getAddress());
+                                verboseOutput("Got DATA #" + dataMessage.getPacketNumber());
+                                //if return false there are more packages to come
+                                if (receiveOperation1.addDatapackage(dataMessage)) {
+                                    receiveOperationsMap.remove(packet.getAddress());
+                                }
+                                verboseOutput("Send Ack #" + dataMessage.getPacketNumber());
+                                network.sendPacket(
+                                        new AcknowledgementMessage(
+                                                dataMessage.getPacketNumber()).buildBlob(),
+                                        packet.getAddress(),
+                                        packet.getPort(),
+                                        false);
+
+                            } catch (NullPointerException e) {
+                                verboseOutput("Got DATA out of a transmission!");
+                            }
+
                         } catch (Exception e) {
                             //@todo: return error message
                             System.out.println(e);
