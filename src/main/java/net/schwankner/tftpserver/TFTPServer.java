@@ -30,7 +30,7 @@ public class TFTPServer {
         Network network = new Network(port, timeout, retries);
         network.connect(true);
 
-        System.out.println("Server waiting for requests...");
+        System.out.println("Server listening on port " + port + " for requests...");
         while (true) {
             try {
                 DatagramPacket packet = network.receivePacket();

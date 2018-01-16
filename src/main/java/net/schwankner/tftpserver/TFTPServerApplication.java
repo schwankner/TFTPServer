@@ -27,10 +27,6 @@ public class TFTPServerApplication {
                 System.exit(0);
             }
 
-            if (line.getArgs().length <= 0 && line.getOptions().length <= 0) {
-                helpInformation(options);
-                System.exit(1);
-            }
             boolean verbose = line.hasOption("verbose");
             TFTPServer tftpServer = new TFTPServer(
                     Integer.parseInt(line.getOptionValue("port", "69")),
