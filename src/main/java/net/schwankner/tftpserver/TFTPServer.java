@@ -113,16 +113,16 @@ public class TFTPServer {
 
                         break;
                     default:
+                        verboseOutput("Got invalid packet from " + packet.getAddress());
                         break;
                 }
 
             } catch (TimeoutException e) {
-                break;
+                //do nothing just start over again receiving packets
             }
 
         }
 
-        network.close();
     }
 
     private void verboseOutput(String message) {
