@@ -1,11 +1,7 @@
 package net.schwankner.tftpserver;
 
-import net.schwankner.tftplibrary.Messages.AcknowledgementMessage;
-import net.schwankner.tftplibrary.Messages.DataMessage;
-import net.schwankner.tftplibrary.Messages.OpCode;
-import net.schwankner.tftplibrary.Messages.WriteMessage;
-import net.schwankner.tftplibrary.Network;
-import net.schwankner.tftplibrary.Utils;
+import net.schwankner.tftplibrary.*;
+import net.schwankner.tftplibrary.Messages.*;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -18,58 +14,89 @@ import java.util.concurrent.TimeoutException;
  */
 public class TFTPServer {
 
-    private int port;
-    private Map<InetAddress,SaveOperation> saveOperationsMap = new HashMap<>();
+    private int port, timeout, retries;
+    private boolean verbose;
+    private Map<InetAddress, ReceiveOperation> receiveOperationsMap = new HashMap<>();
+    private Map<InetAddress, SendOperation> sendOperationsMap = new HashMap<>();
 
-    public TFTPServer(int port){
+    public TFTPServer(int port, int timeout, int retries, boolean verbose) {
         this.port = port;
+        this.timeout = timeout;
+        this.retries = retries;
+        this.verbose = verbose;
     }
 
     public void run() {
-        Network network = new Network(port);
+        Network network = new Network(port, timeout, retries);
         network.connect(true);
 
-        System.out.println("Server waiting for packets...");
+        System.out.println("Server waiting for requests...");
         while (true) {
             try {
                 DatagramPacket packet = network.receivePacket();
 
                 OpCode opcode = Utils.getOpCode(packet.getData());
 
-                System.out.print("Packet type: "+opcode);
                 switch (opcode) {
                     case RRQ:
-
+                        ReadMessage readMessage = new ReadMessage(packet.getData());
+                        SendOperation sendOperation = new SendOperation();
+                        sendOperation.createMessageListFromBin(FileSystem.readFileToBlob(readMessage.getFileName()));
+                        verboseOutput("Got RRQ for " + readMessage.getFileName() + " from " + packet.getAddress().toString());
+                        System.out.println("Write file: " + readMessage.getFileName() + " to: " + packet.getAddress().toString());
+                        verboseOutput("File split in " + sendOperation.getMessageListSize() + " packets");
+                        sendOperationsMap.put(packet.getAddress(), sendOperation);
+                        try {
+                            network.sendPacket(sendOperation.getMessageForSending().buildBlob(), packet.getAddress(), packet.getPort(), false);
+                            verboseOutput("Send DATA #" + sendOperation.getLastSendMessage());
+                        } catch (Exception e) {
+                            System.err.println("Read file created no packets!");
+                        }
                         break;
                     case WRQ:
                         WriteMessage writeMessage = new WriteMessage(packet.getData());
-                        SaveOperation saveOperation = new SaveOperation(writeMessage.getFileName());
-                        saveOperationsMap.put(packet.getAddress(),saveOperation);
-                        System.out.println("\nReceive file: "+writeMessage.getFileName());
+                        ReceiveOperation receiveOperation = new ReceiveOperation(packet.getAddress(), packet.getPort(), writeMessage.getFileName());
+                        receiveOperationsMap.put(packet.getAddress(), receiveOperation);
+                        verboseOutput("Got WRQ for " + writeMessage.getFileName() + " from " + packet.getAddress().toString());
+                        System.out.println("Read file: " + writeMessage.getFileName() + " from: " + packet.getAddress().toString());
                         network.sendPacket(
                                 new AcknowledgementMessage(
                                         (short) 0).buildBlob(),
-                                        packet.getAddress(),
-                                        packet.getPort(),
-                                        false);
+                                packet.getAddress(),
+                                packet.getPort(),
+                                false);
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
-                        System.out.println(" #"+dataMessage.getPacketNumber());
-                        try{
-                            saveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
-                        }catch (Exception e){
+                        verboseOutput("Got DATA #" + dataMessage.getPacketNumber());
+                        try {
+                            verboseOutput("Send Ack #" + dataMessage.getPacketNumber());
+                            receiveOperationsMap.get(packet.getAddress()).addDatapackage(dataMessage);
+                            network.sendPacket(
+                                    new AcknowledgementMessage(
+                                            dataMessage.getPacketNumber()).buildBlob(),
+                                    packet.getAddress(),
+                                    packet.getPort(),
+                                    false);
+                        } catch (Exception e) {
                             //@todo: return error message
                             System.out.println(e);
                         }
-                        network.sendPacket(
-                                new AcknowledgementMessage(
-                                        dataMessage.getPacketNumber()).buildBlob(),
-                                        packet.getAddress(),
-                                        packet.getPort(),
-                                        false);
                         break;
                     case ACK:
+                        AcknowledgementMessage acknowledgementMessage = new AcknowledgementMessage(packet.getData());
+                        verboseOutput("Got ACK #" + acknowledgementMessage.getPacketNumber());
+                        SendOperation sendOperation1 = sendOperationsMap.get(packet.getAddress());
+                        if (sendOperation1.getLastSendMessage() == acknowledgementMessage.getPacketNumber()) {
+                            try {
+                                network.sendPacket(sendOperation1.getMessageForSending().buildBlob(), packet.getAddress(), packet.getPort(), false);
+                                verboseOutput("Send DATA #" + sendOperation1.getLastSendMessage());
+                            } catch (Exception e) {
+                                System.out.println("File with: " + sendOperation1.getDataSize() + " bytes send to: " + packet.getAddress());
+                            }
+                        } else {
+                            System.err.println("illeagal ACK received!");
+                        }
 
                         break;
                     case ERROR:
@@ -86,5 +113,11 @@ public class TFTPServer {
         }
 
         network.close();
+    }
+
+    private void verboseOutput(String message) {
+        if (verbose) {
+            System.out.println(message);
+        }
     }
 }

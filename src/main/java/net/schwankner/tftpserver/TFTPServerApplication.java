@@ -1,13 +1,12 @@
 package net.schwankner.tftpserver;
 
 import org.apache.commons.cli.*;
-import java.net.UnknownHostException;
 
 /**
  * Created by JH on 15.01.18.
  */
 public class TFTPServerApplication {
-    public static void main(String[] args) throws ParseException, UnknownHostException {
+    public static void main(String[] args) {
         // create the command line parser
         CommandLineParser parser = new DefaultParser();
 
@@ -16,18 +15,30 @@ public class TFTPServerApplication {
         options.addOption("n", "protocol", true, "use tcp or udp as transport protocol. Default: udp");
         options.addOption("p", "port", true, "port for connection with remote host. Default: 69");
         options.addOption("t", "timeout", true, "timeout between sending and retries. Default: 10");
-        options.addOption("r", "retries", true, "How many times tftserver retries to send its messages. Default: 5");
+        options.addOption("r", "retries", true, "how many times tftserver retries to send its messages. Default: 5");
+        options.addOption("v", "verbose", false, "verbose output for debuging");
+        options.addOption("h", "help", false, "echos this help");
 
         try {
             // parse the command line arguments
             CommandLine line = parser.parse(options, args);
 
+            if (line.hasOption("help")) {
+                helpInformation(options);
+                System.exit(0);
+            }
+
             if (line.getArgs().length <= 0 && line.getOptions().length <= 0) {
                 helpInformation(options);
                 System.exit(1);
             }
-            TFTPServer tftpServer = new TFTPServer(2069);
-            //@todo:implment read port from cli
+            boolean verbose = line.hasOption("verbose");
+            TFTPServer tftpServer = new TFTPServer(
+                    Integer.parseInt(line.getOptionValue("port", "69")),
+                    Integer.parseInt(line.getOptionValue("timeout", "10")) * 1000,
+                    Integer.parseInt(line.getOptionValue("retries", "5")),
+                    verbose
+            );
             tftpServer.run();
             System.exit(0);
 
