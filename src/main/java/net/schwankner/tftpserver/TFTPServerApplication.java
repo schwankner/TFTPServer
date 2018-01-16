@@ -15,8 +15,8 @@ public class TFTPServerApplication {
         options.addOption("n", "protocol", true, "use tcp or udp as transport protocol. Default: udp");
         options.addOption("p", "port", true, "port for connection with remote host. Default: 69");
         options.addOption("t", "timeout", true, "timeout between sending and retries. Default: 10");
-        options.addOption("r", "retries", true, "How many times tftserver retries to send its messages. Default: 5");
-        options.addOption("v", "verbose", false, "Verbose output for debuging");
+        options.addOption("r", "retries", true, "how many times tftserver retries to send its messages. Default: 5");
+        options.addOption("v", "verbose", false, "verbose output for debuging");
         options.addOption("h", "help", false, "echos this help");
 
         try {
