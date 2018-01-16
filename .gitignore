@@ -30,3 +30,7 @@ hs_err_pid*
 *.iml
 out
 gen
+outfile.txt
+outfile3.txt
+outfile40.txt
+outimg.jpg

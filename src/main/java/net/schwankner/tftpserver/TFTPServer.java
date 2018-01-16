@@ -59,12 +59,16 @@ public class TFTPServer {
                         receiveOperationsMap.put(packet.getAddress(), receiveOperation);
                         verboseOutput("Got WRQ for " + writeMessage.getFileName() + " from " + packet.getAddress().toString());
                         System.out.println("Read file: " + writeMessage.getFileName() + " from: " + packet.getAddress().toString());
-                        network.sendPacket(
-                                new AcknowledgementMessage(
-                                        (short) 0).buildBlob(),
-                                packet.getAddress(),
-                                packet.getPort(),
-                                false);
+                        try {
+                            network.sendPacket(
+                                    new AcknowledgementMessage(
+                                            (short) 0).buildBlob(),
+                                    packet.getAddress(),
+                                    packet.getPort(),
+                                    false);
+                        } catch (Exception e) {
+                            //do nothing
+                        }
                         break;
                     case DATA:
                         DataMessage dataMessage = new DataMessage(packet.getData());
@@ -90,7 +94,7 @@ public class TFTPServer {
 
                         } catch (Exception e) {
                             //@todo: return error message
-                            System.out.println(e);
+                            System.err.println(e);
                         }
                         break;
                     case ACK:
